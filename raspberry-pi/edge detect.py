@@ -115,6 +115,8 @@ while(True):
   
                 else:
                     print "Invalid"
+                    #new code added
+                    usb.write("N")
                     
                 maxcounter=0
                 counter=0

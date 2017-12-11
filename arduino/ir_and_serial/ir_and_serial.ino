@@ -153,7 +153,65 @@ void loop()
     if(irFL.state() || irFR.state() || irBL.state() || irBR.state())
     {
       //fill after fixing which ir module to use
+      
+      if (irFL.state() && irFR.state() && irBL.state()  && irBR.state()) //all ir shown means an error
+      {
+        mLeft.halt();
+        mRight.halt();
+      }
+      else if (irFL.state() && irFR.state()) // border in front
+      {
+        mLeft.backward();
+        mRight.backward();
+      }
+      else if (irBL.state() && irBR.state()) //border in back
+      {
+        mLeft.forward();
+        mRight.forward();
+      }
+      else if (irFL.state() && irBL.state()) //border in left
+      {
+        mLeft.forward();
+        mRight.backward();
+      }
+      else if (irFR.state() && irBR.state()) //border in right
+      {
+        mLeft.backward();
+        mRight.forward();
+      }
+      else if (irFL.state()) 
+      {
+        mLeft.backward();
+        mRight.halt();
+      }
+      else if (irFR.state())
+      {
+        mLeft.halt();
+        mRight.backward();
+      }
+      else if (irBL.state())
+      {
+        mLeft.forward();
+        mRight.halt();
+      }
+      else if (irBR.state())
+      {
+        mLeft.halt();
+        mRight.forward();
+      }
+      else
+      {
+        mLeft.halt();
+        mRight.halt();
+      }
 
+      if(imageProcess)
+      {
+        //stop image processing
+        Serial.print("S");  
+        imageProcess=false;
+      }
+      
       serialFound=false;
       sequenceCounter=0;
       stateDefined=false;
@@ -179,6 +237,7 @@ void loop()
             rotateLeft=false;
           }
         }
+        //have to check if pi sends random data over serial
         else
         {
           serialFound=false;
@@ -223,6 +282,12 @@ void loop()
       //custom sequence
       else if(!serialFound && sequenceCounter<=maxSequence)
       {
+        if(!imageProcess)
+        {
+          //start image processing
+          Serial.print("G");
+          imageProcess=true;
+        }
         if(!stateDefined)
         {
           randNo=random(0,5); // get random number from 0 to 4
@@ -257,25 +322,25 @@ inline int getMaxRotation(int ch)
   switch(ch)
   {
     case 0:
-      return;
+      return 0;
     case 1:
-      return;
+      return 0;
     case 2:
-      return; 
+      return 0; 
     case 3:
-      return;
+      return 0;
     case 4:
-      return;
+      return 0;
     case 5:
-      return;
+      return 0;
     case 6:
-      return;
+      return 0;
     case 7:
-      return;
+      return 0;
     case 8:
-      return;
+      return 0;
     case 9:
-      return;
+      return 0;
     default:
       return 0;
   }

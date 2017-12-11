@@ -81,7 +81,7 @@ while(True):
         #check Serial bus for commands
         c=usb.read()
 
-        #print(c)
+        print(c)
         if((c==stopCode or serialStop) and c!=startCode):
             serialStop=True
             counter=0

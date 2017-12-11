@@ -118,12 +118,13 @@ motor mLeft(motor1_1,motor1_2),mRight(motor2_1,motor2_2);
 irModule irFL(ir0),irFR(ir1),irBL(ir2),irBR(ir3);
 
 //maximum sequence state
-int maxSequence=100;
+int maxSequence=10000; //5 sec approx
 int maxRotation;
 int sequenceCounter=0;
 
 //serial data
 int ch;
+char chr;
 boolean imageProcess=false;
 boolean serialFound=false;
 boolean rotateLeft;
@@ -141,7 +142,7 @@ void loop()
 { 
   //check if main switch is on
   switchState=digitalRead(switchPin);
-  if(switchState==1)
+  if(true)
   {
     //load ir module states
     irFL.check();
@@ -221,7 +222,8 @@ void loop()
       //serial check
       if(Serial.available()>0)
       {
-        ch=Serial.read()-'0';
+        chr=Serial.read();
+        ch=chr-'0';
 
         if(ch>=0 && ch<=9)
         {
@@ -236,24 +238,24 @@ void loop()
           {
             rotateLeft=false;
           }
+          
+          if(imageProcess)
+          {
+            //stop image processing
+            Serial.print("S");  
+            imageProcess=false;
+          }
         }
         //have to check if pi sends random data over serial
-        else
+        else if(chr=='N')
         {
           serialFound=false;
           sequenceCounter=0;
           stateDefined=false;
         }
-        if(imageProcess)
-        {
-          //stop image processing
-          Serial.print("S");  
-          imageProcess=false;
-        }
-        
       }
       //serial sequence
-      else if(serialFound && sequenceCounter<=maxSequence)
+      if(serialFound && sequenceCounter<=maxSequence)
       {
         //check to rotate to perfectly position the bot
         if(sequenceCounter<=maxRotation)
@@ -305,6 +307,9 @@ void loop()
           Serial.print("G");
           imageProcess=true;
         }
+        serialFound=false;
+        sequenceCounter=0;
+        stateDefined=false;
       }
     }
   }

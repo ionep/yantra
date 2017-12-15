@@ -72,6 +72,10 @@ counter=0 #variable to control the object detect loop before serial check
 maxcounter=0 #variable to check to send data to arduino
 co=None #empty object to store contours temporarily
 
+#threshold value for red in hsv
+lower_red=np.array([-10,50,50])
+higher_red=np.array([10,255,255])
+
 #main loop
 while(True):
 
@@ -136,13 +140,14 @@ while(True):
                 
                 #find all the contours(shapes)
                 contours, hierarchy = cv2.findContours(cpedge,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
                 #sort the contours in ascending order of area i.e find the 10 contours
                 #of highest area
                 contours=sorted(contours,key=cv2.contourArea,reverse=True)[:10]
                 
 
                 #loop over the contours to find the required one
-                for c in contours:
+                for i,c in enumerate(contours):
                     
                     #approximate the contour to 4 points (for a rectangle)
                     peri=cv2.arcLength(c,True)
@@ -161,16 +166,28 @@ while(True):
                     periCalc=2*(width+height)
                     area=cv2.contourArea(c)
                     co=None
-                    if(abs(periCalc-peri)<noise and len(approx)>=4 and area>20):
-                        bot[noOfBots]=approx
-                        noOfBots=noOfBots+1
-                        co=approx
-                        break
-                    elif(len(approx)>=4 and area>20):
-                        bot[noOfBots]=approx
-                        noOfBots=noOfBots+1
-                        co=approx
-                        break
+                    #abs(periCalc-peri)<noise and
+                    if(len(approx)>=4 and area>20):
+                        #mask the contour onto another image
+                        mask=np.zeros_like(image)
+                        cv2.fillConvexPoly(mask,approx,(255,255,255))
+                        newImg=cv2.bitwise_and(image,mask)
+
+                        #change to hsv and conver to binary with red as white
+                        hsv=cv2.cvtColor(newImg,cv2.COLOR_BGR2HSV)
+                        redImg = cv2.inRange(hsv,lower_red,higher_red);
+
+                        cv2.imshow("asd",redImg)
+
+                        isRed,hierarchy = cv2.findContours(redImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+                        isRed=sorted(isRed,key=cv2.contourArea,reverse=True)
+
+                        if(len(isRed)>0):
+                            #register as bot
+                            bot[noOfBots]=approx
+                            noOfBots=noOfBots+1
+                            co=approx
+                            break
     
 
                     

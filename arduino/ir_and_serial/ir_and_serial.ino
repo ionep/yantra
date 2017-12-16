@@ -67,12 +67,12 @@ class irModule
   
   boolean check()
   {
-    shade=analogRead(pin);
+    shade=digitalRead(pin);
   }
 
   boolean state()
   {
-    if(shade>650)
+    if(shade==0)
     {
       return true;
     }
@@ -105,14 +105,14 @@ void setup()
   pinMode(switchPin,INPUT);
 
   //get noise for randomization
-  randomSeed(analogRead(0));
+  randomSeed(analogRead(emptyPin));
 
   //stop image processing at first
   Serial.print("S");
 }
 
 //instantiate the motors
-motor mLeft(motor1_1,motor1_2),mRight(motor2_1,motor2_2);
+motor mRight(motor1_2,motor1_1),mLeft(motor2_1,motor2_2);
 
 //instantiate the ir modules
 irModule irFL(ir0),irFR(ir1),irBL(ir2),irBR(ir3);
@@ -155,7 +155,8 @@ void loop()
     {
       //fill after fixing which ir module to use
       
-      if (irFL.state() && irFR.state() && irBL.state()  && irBR.state()) //all ir shown means an error
+      if ((irFL.state() && irFR.state() && irBL.state()  && irBR.state()) || (irFL.state() && irBR.state()) || (irFR.state() && irBL.state()) || 
+      (irFL.state() && irFR.state() && (irBL.state() || irBR.state())) || (irBL.state() && irBR.state() && (irFL.state() || irFR.state())) ) //all ir shown means an error
       {
         mLeft.halt();
         mRight.halt();
@@ -317,6 +318,7 @@ void loop()
   {
     //migh need to bring outside so that it always stops
     //stop all motors if main switch is not on
+    // dont move out
     mLeft.halt();
     mRight.halt();
   }

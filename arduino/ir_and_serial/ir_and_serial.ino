@@ -13,8 +13,6 @@
 
 #define switchPin 9
 
-//get the rotation to face our bot with opponent
-inline int getMaxRotation(int);
 
 //get a random sequence
 inline void haveFun(int);
@@ -109,6 +107,8 @@ void setup()
 
   //stop image processing at first
   Serial.print("S");
+
+  //digitalWrite(A2,HIGH);
 }
 
 //instantiate the motors
@@ -118,7 +118,7 @@ motor mRight(motor1_2,motor1_1),mLeft(motor2_1,motor2_2);
 irModule irFL(ir0),irFR(ir1),irBL(ir2),irBR(ir3);
 
 //maximum sequence state
-int maxSequence=10000; //5 sec approx
+unsigned int maxSequence=65000; //5 sec approx
 int maxRotation;
 int sequenceCounter=0;
 
@@ -138,12 +138,18 @@ int switchState;
 //random number for sequence
 int randNo;
 
+boolean firstTime=true;
 void loop()
 { 
   //check if main switch is on
   switchState=digitalRead(switchPin);
-  if(true)
+  if(switchState==1)
   {
+    if(firstTime)
+    {
+      delay(2000);
+      firstTime=false;
+    }
     //load ir module states
     irFL.check();
     irFR.check();
@@ -230,13 +236,14 @@ void loop()
         {
           serialFound=true;
           sequenceCounter=0;
-          maxRotation=getMaxRotation(ch);
           if(ch<=4)
           {
+            maxRotation=maxSequence/2-ch*maxSequence/10;
             rotateLeft=true;
           }
           else
           {
+            maxRotation=maxSequence/2+(9-ch)*maxSequence/10;
             rotateLeft=false;
           }
           
@@ -316,40 +323,12 @@ void loop()
   }
   else
   {
+    firstTime=true;
     //migh need to bring outside so that it always stops
     //stop all motors if main switch is not on
     // dont move out
     mLeft.halt();
     mRight.halt();
-  }
-}
-
-inline int getMaxRotation(int ch)
-{
-  switch(ch)
-  {
-    case 0:
-      return 0;
-    case 1:
-      return 0;
-    case 2:
-      return 0; 
-    case 3:
-      return 0;
-    case 4:
-      return 0;
-    case 5:
-      return 0;
-    case 6:
-      return 0;
-    case 7:
-      return 0;
-    case 8:
-      return 0;
-    case 9:
-      return 0;
-    default:
-      return 0;
   }
 }
 

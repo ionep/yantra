@@ -14,8 +14,11 @@ def bestValue(bot,noOfBots):
     y=np.empty(noOfBots,dtype=int)
     for i in range(0,noOfBots-1):
         M=cv2.moments(bot[i])
-        x[i]=int(M["m10"]/M["m00"])
-        y[i]=int(M["m01"]/M["m00"])
+        if(M["m00"]!=0):
+            x[i]=int(M["m10"]/M["m00"])
+            y[i]=int(M["m01"]/M["m00"])
+        else:
+            continue
         
     #calculate median
     x.sort()
@@ -76,6 +79,8 @@ co=None #empty object to store contours temporarily
 lower_red=np.array([-10,50,50])
 higher_red=np.array([10,255,255])
 
+preNum=0;
+
 #main loop
 while(True):
 
@@ -84,8 +89,8 @@ while(True):
 
         #check Serial bus for commands
         c=usb.read()
-
-        print(c)
+        if(c=='S' or c=='G'):
+            print(c)
         if((c==stopCode or serialStop) and c!=startCode):
             serialStop=True
             counter=0
@@ -96,7 +101,7 @@ while(True):
         else:
             serialStop=False
             
-            if(maxcounter>=135):
+            if(maxcounter>=20):
                 print "max reached"
 
                 #get best value among all for the bot
@@ -118,6 +123,7 @@ while(True):
                         usb.write(str(coded))
   
                 else:
+                    
                     print "Invalid"
                     #new code added
                     usb.write("N")
@@ -146,6 +152,7 @@ while(True):
                 contours=sorted(contours,key=cv2.contourArea,reverse=True)[:10]
                 
 
+                preNum=noOfBots
                 #loop over the contours to find the required one
                 for i,c in enumerate(contours):
                     
@@ -173,7 +180,7 @@ while(True):
                         cv2.fillConvexPoly(mask,approx,(255,255,255))
                         newImg=cv2.bitwise_and(image,mask)
 
-                        #change to hsv and conver to binary with red as white
+                        #change to hsv and convert to binary with red as white
                         hsv=cv2.cvtColor(newImg,cv2.COLOR_BGR2HSV)
                         redImg = cv2.inRange(hsv,lower_red,higher_red);
 
@@ -190,7 +197,23 @@ while(True):
                             break
     
 
-                    
+                #nothing found then check color only
+                if(noOfBots==preNum):
+                    hsv=cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+                    redImg = cv2.inRange(hsv,lower_red,higher_red);
+
+                    cv2.imshow("asd",redImg)
+
+                    isRed,hierarchy = cv2.findContours(redImg,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+                    isRed=sorted(isRed,key=cv2.contourArea,reverse=True)
+
+                    if(len(isRed)>0):
+                        #register as bot
+                        approx=cv2.convexHull(isRed[0])
+                        bot[noOfBots]=approx
+                        noOfBots=noOfBots+1
+                        co=approx
+
                 #draw over the contour
                 cv2.drawContours(image,[co],-1,(0,255,0),3)
 

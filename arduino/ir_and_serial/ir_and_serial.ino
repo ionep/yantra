@@ -118,7 +118,7 @@ motor mRight(motor1_2,motor1_1),mLeft(motor2_1,motor2_2);
 irModule irFL(ir0),irFR(ir1),irBL(ir2),irBR(ir3);
 
 //maximum sequence state
-unsigned int maxSequence=65000; //5 sec approx
+unsigned int maxSequence=65000; //3 sec approx
 int maxRotation;
 int sequenceCounter=0;
 
@@ -139,6 +139,7 @@ int switchState;
 int randNo;
 
 boolean firstTime=true;
+boolean straightForward;
 void loop()
 { 
   //check if main switch is on
@@ -247,6 +248,8 @@ void loop()
             rotateLeft=false;
           }
           
+          straightForward=true;
+          
           if(imageProcess)
           {
             //stop image processing
@@ -282,6 +285,11 @@ void loop()
         //if positioned
         else
         {
+          if(straightForward)
+          {
+            sequenceCounter=0;
+            straightForward=false;
+          }
           //send the bot to opponent
           mLeft.forward();
           mRight.forward();
